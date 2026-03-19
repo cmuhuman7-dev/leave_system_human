@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบบันทึกข้อมูลการลา | HR Human CMU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+:root {
+  --c1: #EEFABD;
+  --c2: #A0D585;
+  --c3: #6984A9;
+  --c4: #263B6A;
+  --c4-light: #3a5490;
+  --bg: #f4f8ee;
+  --white: #ffffff;
+  --shadow-sm: 0 2px 8px rgba(38,59,106,0.10);
+  --shadow-md: 0 4px 20px rgba(38,59,106,0.15);
+  --shadow-lg: 0 8px 40px rgba(38,59,106,0.20);
+  --radius: 14px;
+  --radius-sm: 8px;
+  --trans: all 0.22s cubic-bezier(0.4,0,0.2,1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans Thai', sans-serif;
+  background: var(--bg);
+  min-height: 100vh;
+  color: var(--c4);
+  font-size: 14px;
+}
+
+/* ─── HEADER ─── */
+.header {
+  background: var(--c4);
+  padding: 0 28px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-md);
+}
+.header-icon {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, var(--c2), var(--c1));
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.header-text h1 { font-size: 1.1rem; font-weight: 700; color: var(--c1); line-height: 1.3; }
+.header-text p  { font-size: 0.75rem; color: rgba(238,250,189,0.65); margin-top: 1px; }
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.header-badge {
+  background: var(--c2);
+  color: var(--c4);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* ─── NAV ─── */
+.nav {
+  background: var(--c4-light);
+  display: flex;
+  overflow-x: auto;
+  gap: 2px;
+  padding: 6px 16px;
+  scrollbar-width: none;
+}
+.nav::-webkit-scrollbar { display: none; }
+.nav-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.65);
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Noto Sans Thai', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: var(--trans);
+  display: flex; align-items: center; gap: 6px;
+}
+.nav-btn:hover { background: rgba(255,255,255,0.12); color: white; }
+.nav-btn.active {
+  background: var(--c1);
+  color: var(--c4);
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* ─── TOAST BANNER ─── */
+#sys-banner {
+  display: none;
+  background: var(--c4);
+  color: var(--c1);
+  text-align: center;
+  padding: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  animation: slideDown 0.3s ease;
+}
+@keyframes slideDown { from { transform: translateY(-100%); opacity:0; } to { transform: translateY(0); opacity:1; } }
+
+/* ─── MAIN ─── */
+.main { padding: 24px; max-width: 1280px; margin: 0 auto; }
+
+/* ─── CARD ─── */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+  border: 1px solid rgba(160,213,133,0.25);
+  transition: var(--trans);
+}
+.card:hover { box-shadow: var(--shadow-md); }
+.card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--c4);
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--c1);
+  display: flex; align-items: center; gap: 8px;
+}
+.card-subtitle {
+  font-size: 0.75rem;
+  color: var(--c3);
+  font-weight: 400;
+  margin-left: auto;
+}
+
+/* ─── FORM ─── */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--c3);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 9px 12px;
+  border: 2px solid #e8eef0;
+  border-radius: var(--radius-sm);
+  font-family: 'Noto Sans Thai', sans-serif;
+  font-size: 0.88rem;
+  color: var(--c4);
+  background: #fafcff;
+  transition: var(--trans);
+  outline: none;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--c3);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(105,132,169,0.12);
+}
+.form-group input[readonly] { background: #f0f2f5; color: #666; }
+.form-group textarea { resize: vertical; min-height: 70px; }
+
+/* ─── DAY TYPE ─── */
+.day-type-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.day-opt {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 14px;
+  border: 2px solid #e0e8f0;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: var(--trans);
+  font-size: 0.85rem;
+  user-select: none;
+}
+.day-opt:has(input:checked) {
+  border-color: var(--c3);
+  background: linear-gradient(135deg, #EEF6FF, #f0f4ff);
+  color: var(--c4);
+  font-weight: 600;
+}
+.day-opt input { display: none; }
+
+/* ─── BUTTONS ─── */
+.btn {
+  padding: 9px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: 'Noto Sans Thai', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: var(--trans);
+  display: inline-flex; align-items: center; gap: 6px;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--c4); color: white; }
+.btn-primary:hover { background: var(--c4-light); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(38,59,106,0.3); }
+.btn-success { background: var(--c2); color: var(--c4); }
+.btn-success:hover { filter: brightness(0.94); }
+.btn-info { background: var(--c3); color: white; }
+.btn-info:hover { filter: brightness(0.9); }
+.btn-danger { background: #e74c3c; color: white; }
+.btn-danger:hover { background: #c0392b; }
+.btn-warning { background: #f0a500; color: white; }
+.btn-warning:hover { background: #d4920a; }
+.btn-ghost { background: transparent; border: 2px solid var(--c3); color: var(--c3); }
+.btn-ghost:hover { background: var(--c3); color: white; }
+.btn-sm { padding: 5px 10px; font-size: 0.78rem; border-radius: 6px; }
+.btn-xs { padding: 3px 8px; font-size: 0.72rem; border-radius: 5px; }
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+
+/* ─── TABLE ─── */
+.table-wrap { overflow-x: auto; border-radius: var(--radius-sm); }
+table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+thead th {
+  background: var(--c4);
+  color: var(--c1);
+  padding: 10px 13px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+thead th:first-child { border-radius: 8px 0 0 0; }
+thead th:last-child  { border-radius: 0 8px 0 0; }
+tbody td { padding: 9px 13px; border-bottom: 1px solid #f0f4f8; vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: #f7faff; }
+tbody tr:nth-child(even) td { background: #fafcff; }
+tbody tr:nth-child(even):hover td { background: #f0f6ff; }
+.no-data { text-align: center; color: #aaa; padding: 40px !important; font-size: 0.9rem; }
+
+/* ─── BADGE ─── */
+.badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ─── INFO BOX ─── */
+.info-box {
+  display: none;
+  background: linear-gradient(135deg, #EEF6FF, #f4f8ff);
+  border-left: 4px solid var(--c3);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  color: var(--c4);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+.info-box.show { display: block; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+
+/* ─── FILTER BAR ─── */
+.filter-bar {
+  background: linear-gradient(135deg, rgba(238,250,189,0.6), rgba(160,213,133,0.2));
+  border: 1px solid rgba(160,213,133,0.4);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-bottom: 18px;
+}
+.filter-bar .form-group { min-width: 160px; }
+
+/* ─── STAT CARDS ─── */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px 14px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(160,213,133,0.25);
+  border-top: 4px solid var(--c3);
+  transition: var(--trans);
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.stat-num { font-size: 2rem; font-weight: 800; color: var(--c4); line-height: 1; }
+.stat-lbl { font-size: 0.73rem; color: #888; margin-top: 4px; font-weight: 500; }
+
+/* ─── CHARTS ─── */
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.chart-box { position: relative; height: 300px; }
+.chart-box-tall { position: relative; height: 380px; }
+
+/* ─── QUOTA BAR ─── */
+.quota-bar { background: #e8eef5; border-radius: 10px; height: 7px; width: 90px; overflow: hidden; display: inline-block; vertical-align: middle; }
+.quota-fill { height: 100%; border-radius: 10px; transition: width 0.6s ease; }
+
+/* ─── TABS ─── */
+.tab-content { display: none; animation: fadeIn 0.25s ease; }
+.tab-content.active { display: block; }
+
+/* ─── MODAL ─── */
+.modal-overlay {
+  display: none;
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(38,59,106,0.55);
+  z-index: 500;
+  overflow-y: auto;
+  padding: 30px 16px;
+  backdrop-filter: blur(3px);
+}
+.modal-box {
+  background: white;
+  border-radius: var(--radius);
+  padding: 28px;
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: var(--shadow-lg);
+  animation: modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes modalIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.modal-title { font-size: 1.05rem; font-weight: 700; color: var(--c4); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+
+/* ─── COLLAPSIBLE FORM ─── */
+.form-panel {
+  display: none;
+  border: 2px solid var(--c2);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, rgba(238,250,189,0.3), rgba(255,255,255,0.8));
+  animation: fadeIn 0.2s ease;
+}
+.form-panel.show { display: block; }
+
+/* ─── LINE GUIDE BOX ─── */
+.line-guide {
+  background: linear-gradient(135deg, #06C755, #04a844);
+  border-radius: 12px;
+  padding: 20px;
+  color: white;
+  margin-bottom: 20px;
+}
+.line-guide h3 { font-size: 1rem; font-weight: 700; margin-bottom: 10px; }
+.line-guide ol { margin-left: 18px; line-height: 2; font-size: 0.85rem; }
+.line-step {
+  background: rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  font-size: 0.82rem;
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+  .main { padding: 14px; }
+  .charts-grid { grid-template-columns: 1fr; }
+  .header-text p { display: none; }
+  .header h1 { font-size: 0.95rem; }
+}
+@media (max-width: 500px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="sys-banner">⚙️ กำลังเชื่อมต่อระบบ...</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-icon">📋</div>
+  <div class="header-text">
+    <h1>ระบบบันทึกข้อมูลการลาพนักงานโครงการ</h1>
+    <p>ฝ่ายทรัพยากรบุคคล | HR Human CMU</p>
+  </div>
+  <div class="header-right">
+    <span class="header-badge" id="emp-count-badge">กำลังโหลด...</span>
+  </div>
+</div>
+
+<!-- NAVIGATION -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="showTab('leave-form',this)">📝 บันทึกการลา</button>
+  <button class="nav-btn" onclick="showTab('stats',this)">📊 สถิติการลา</button>
+  <button class="nav-btn" onclick="showTab('individual',this)">👤 สถิติรายบุคคล</button>
+  <button class="nav-btn" onclick="showTab('employees',this)">👥 จัดการพนักงาน</button>
+  <button class="nav-btn" onclick="showTab('leave-types',this)">📋 ประเภทการลา</button>
+  <button class="nav-btn" onclick="showTab('holidays',this)">🗓️ วันหยุด</button>
+  <button class="nav-btn" onclick="showTab('line-setup',this)">💬 ตั้งค่า Line</button>
+</nav>
+
+<div class="main">
+
+<!-- ===== TAB: LEAVE FORM ===== -->
+<div id="tab-leave-form" class="tab-content active">
+  <div class="card">
+    <div class="card-title">📝 บันทึกข้อมูลการลา <span class="card-subtitle">กรอกข้อมูลให้ครบถ้วน</span></div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>ชื่อ-สกุล พนักงาน *</label>
+        <select id="lf-emp" onchange="onEmpChange()">
+          <option value="">— เลือกพนักงาน —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>ประเภทการลา *</label>
+        <select id="lf-type" onchange="onTypeChange()">
+          <option value="">— เลือกประเภทการลา —</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <div id="lf-info" class="info-box"></div>
+      </div>
+      <div class="form-group full">
+        <label>สาเหตุการลา *</label>
+        <textarea id="lf-reason" placeholder="ระบุสาเหตุการลา..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>วันที่เริ่มลา *</label>
+        <input type="date" id="lf-start" onchange="calcDays()">
+      </div>
+      <div class="form-group">
+        <label>ลาถึงวันที่ *</label>
+        <input type="date" id="lf-end" onchange="calcDays()">
+      </div>
+      <div class="form-group full">
+        <label>ประเภทวัน</label>
+        <div class="day-type-row">
+          <label class="day-opt"><input type="radio" name="daytype" value="full" checked onchange="calcDays()"> 🌕 เต็มวัน</label>
+          <label class="day-opt"><input type="radio" name="daytype" value="morning" onchange="calcDays()"> 🌅 ครึ่งวันเช้า</label>
+          <label class="day-opt"><input type="radio" name="daytype" value="afternoon" onchange="calcDays()"> 🌇 ครึ่งวันบ่าย</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>จำนวนวันลา (วันทำการ)</label>
+        <input type="number" id="lf-days" value="0" step="0.5" min="0" readonly>
+      </div>
+      <div class="form-group">
+        <label>ติดต่อได้ที่ (เบอร์โทร) *</label>
+        <input type="tel" id="lf-phone" placeholder="เช่น 081-234-5678">
+      </div>
+      <div class="form-group" id="grp-sub" style="display:none;">
+        <label>ผู้ปฏิบัติงานแทน</label>
+        <input type="text" id="lf-sub" placeholder="ระบุชื่อผู้ปฏิบัติงานแทน">
+      </div>
+      <div class="form-group full">
+        <label>แนบไฟล์ (ถ้ามี)</label>
+        <input type="file" id="lf-file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+        <small style="color:#999; margin-top:3px; font-size:0.75rem;">รองรับ PDF, รูปภาพ, Word | สำหรับแนบใบรับรองแพทย์ ใบมรณะบัตร ฯลฯ</small>
+      </div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="submitLeave()">💾 บันทึกการลา</button>
+      <button class="btn btn-ghost" onclick="resetForm()">🔄 ล้างข้อมูล</button>
+    </div>
+  </div>
+
+  <!-- Records Table -->
+  <div class="card">
+    <div class="card-title">📑 รายการลาทั้งหมด</div>
+    <div class="filter-bar">
+      <div class="form-group">
+        <label>ตั้งแต่วันที่</label>
+        <input type="date" id="f-start">
+      </div>
+      <div class="form-group">
+        <label>ถึงวันที่</label>
+        <input type="date" id="f-end">
+      </div>
+      <div class="form-group">
+        <label>พนักงาน</label>
+        <select id="f-emp">
+          <option value="">ทั้งหมด</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="loadRecords()">🔍 ค้นหา</button>
+      <button class="btn btn-success" onclick="exportCSV()">⬇️ Export</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>รหัสการลา</th>
+            <th>ชื่อ-สกุล</th>
+            <th>ประเภทการลา</th>
+            <th>วันที่ลา</th>
+            <th>ถึงวันที่</th>
+            <th>ประเภทวัน</th>
+            <th>จำนวนวัน</th>
+            <th>เบอร์โทร</th>
+            <th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="rec-tbody"><tr><td colspan="9" class="no-data">กำลังโหลด...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB: STATS ===== -->
+<div id="tab-stats" class="tab-content">
+  <div class="filter-bar">
+    <div class="form-group">
+      <label>ตั้งแต่วันที่</label>
+      <input type="date" id="s-start">
+    </div>
+    <div class="form-group">
+      <label>ถึงวันที่</label>
+      <input type="date" id="s-end">
+    </div>
+    <button class="btn btn-primary" onclick="loadStats()">📊 แสดงสถิติ</button>
+  </div>
+  <div class="stats-grid" id="st-summary"></div>
+  <div class="charts-grid">
+    <div class="card">
+      <div class="card-title">🥧 สัดส่วนตามประเภทการลา</div>
+      <div class="chart-box"><canvas id="ch-pie"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📊 จำนวนวันลาตามประเภท</div>
+      <div class="chart-box"><canvas id="ch-bar"></canvas></div>
+    </div>
+    <div class="card" style="grid-column:1/-1">
+      <div class="card-title">👥 วันลารวมของพนักงานแต่ละคน</div>
+      <div class="chart-box-tall"><canvas id="ch-emp"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">📋 ตารางสรุปรายบุคคล</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ชื่อ-สกุล</th>
+            <th>ลาป่วย</th>
+            <th>ลาคลอด</th>
+            <th>ลาช่วยภริยา</th>
+            <th>ลากิจส่วนตัว</th>
+            <th>ลากิจพิเศษ</th>
+            <th>ลาพักผ่อน</th>
+            <th>รวม</th>
+          </tr>
+        </thead>
+        <tbody id="st-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB: INDIVIDUAL ===== -->
+<div id="tab-individual" class="tab-content">
+  <div class="card">
+    <div class="card-title">👤 สถิติการลารายบุคคล</div>
+    <div class="filter-bar" style="margin-bottom:0">
+      <div class="form-group">
+        <label>เลือกพนักงาน</label>
+        <select id="i-emp"><option value="">— เลือกพนักงาน —</option></select>
+      </div>
+      <div class="form-group">
+        <label>ปีงบประมาณ</label>
+        <select id="i-year">
+          <option value="2025">2568 (ต.ค.2567 – ก.ย.2568)</option>
+          <option value="2026" selected>2569 (ต.ค.2568 – ก.ย.2569)</option>
+          <option value="2027">2570 (ต.ค.2569 – ก.ย.2570)</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="loadIndividual()">🔍 ดูสถิติ</button>
+    </div>
+  </div>
+  <div id="i-content" style="display:none">
+    <div class="stats-grid" id="i-summary"></div>
+    <div class="charts-grid">
+      <div class="card">
+        <div class="card-title">🥧 สัดส่วนการลา</div>
+        <div class="chart-box"><canvas id="i-pie"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 วันลาตามประเภท</div>
+        <div class="chart-box"><canvas id="i-bar"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📊 สิทธิ์และยอดคงเหลือการลา</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ประเภทการลา</th><th>สิทธิ์สูงสุด</th><th>ใช้ไปแล้ว</th><th>คงเหลือ</th><th>%ที่ใช้</th></tr></thead>
+          <tbody id="i-quota"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📑 ประวัติการลา</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ประเภทการลา</th><th>สาเหตุ</th><th>วันที่ลา</th><th>ถึงวันที่</th><th>จำนวนวัน</th><th>จัดการ</th></tr></thead>
+          <tbody id="i-hist"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB: EMPLOYEES ===== -->
+<div id="tab-employees" class="tab-content">
+  <div class="card">
+    <div class="card-title">👥 จัดการรายชื่อพนักงาน</div>
+    <div style="margin-bottom:14px">
+      <button class="btn btn-primary" onclick="togglePanel('emp-panel','➕ เพิ่มพนักงานใหม่','new-emp')">➕ เพิ่มพนักงาน</button>
+    </div>
+    <div id="emp-panel" class="form-panel">
+      <div class="modal-title" id="emp-panel-title">➕ เพิ่มพนักงานใหม่</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>รหัสพนักงาน *</label>
+          <input type="text" id="ep-id" placeholder="เช่น P170001">
+        </div>
+        <div class="form-group">
+          <label>ชื่อ-นามสกุล *</label>
+          <input type="text" id="ep-name" placeholder="เช่น น.ส.ชื่อ นามสกุล">
+        </div>
+        <div class="form-group">
+          <label>วันที่เริ่มงาน *</label>
+          <input type="date" id="ep-date">
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="saveEmployee()">💾 บันทึก</button>
+        <button class="btn btn-ghost" onclick="closePanel('emp-panel')">✕ ยกเลิก</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>รหัสพนักงาน</th><th>ชื่อ-นามสกุล</th><th>วันที่เริ่มงาน</th><th>จัดการ</th></tr></thead>
+        <tbody id="emp-tbody"><tr><td colspan="5" class="no-data">กำลังโหลด...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB: LEAVE TYPES ===== -->
+<div id="tab-leave-types" class="tab-content">
+  <div class="card">
+    <div class="card-title">📋 จัดการประเภทการลา</div>
+    <div style="margin-bottom:14px">
+      <button class="btn btn-primary" onclick="togglePanel('lt-panel','➕ เพิ่มประเภทการลาใหม่','new-lt')">➕ เพิ่มประเภทการลา</button>
+    </div>
+    <div id="lt-panel" class="form-panel">
+      <div class="modal-title" id="lt-panel-title">➕ เพิ่มประเภทการลาใหม่</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>รหัสประเภทการลา *</label>
+          <input type="text" id="ltp-id" placeholder="เช่น LT008">
+        </div>
+        <div class="form-group">
+          <label>ชื่อประเภทการลา *</label>
+          <input type="text" id="ltp-name" placeholder="เช่น ลาป่วย">
+        </div>
+        <div class="form-group">
+          <label>จำนวนวันสูงสุด (วันทำการ)</label>
+          <input type="number" id="ltp-max" placeholder="เช่น 15" min="0">
+        </div>
+        <div class="form-group full">
+          <label>หมายเหตุ/รายละเอียด</label>
+          <textarea id="ltp-notes" rows="2" placeholder="รายละเอียดเพิ่มเติม..."></textarea>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="saveLeaveType()">💾 บันทึก</button>
+        <button class="btn btn-ghost" onclick="closePanel('lt-panel')">✕ ยกเลิก</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>รหัส</th><th>ชื่อประเภทการลา</th><th>วันสูงสุด</th><th>หมายเหตุ</th><th>จัดการ</th></tr></thead>
+        <tbody id="lt-tbody"><tr><td colspan="5" class="no-data">กำลังโหลด...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB: HOLIDAYS ===== -->
+<div id="tab-holidays" class="tab-content">
+  <div class="card">
+    <div class="card-title">🗓️ วันหยุดนักขัตฤกษ์และวันหยุดชดเชย</div>
+    <div class="filter-bar" style="margin-bottom:18px">
+      <div class="form-group">
+        <label>วันที่</label>
+        <input type="date" id="h-date">
+      </div>
+      <div class="form-group">
+        <label>ชื่อวันหยุด</label>
+        <input type="text" id="h-name" placeholder="เช่น วันหยุดชดเชยวันสงกรานต์">
+      </div>
+      <button class="btn btn-primary" style="align-self:flex-end" onclick="addHoliday()">➕ เพิ่มวันหยุด</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>วันที่</th><th>ชื่อวันหยุด</th><th>วัน</th><th>จัดการ</th></tr></thead>
+        <tbody id="hol-tbody"><tr><td colspan="4" class="no-data">กำลังโหลด...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB: LINE SETUP ===== -->
+<div id="tab-line-setup" class="tab-content">
+  <div class="line-guide">
+    <h3>📱 วิธีการตั้งค่าแจ้งเตือนใบลาผ่าน LINE Official Account</h3>
+    <p style="font-size:0.8rem; opacity:0.9; margin-bottom:12px">ทำตามขั้นตอนต่อไปนี้ทีละขั้น เพื่อเชื่อมต่อระบบบันทึกการลากับ LINE</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📌 ขั้นตอนที่ 1: สร้าง LINE Official Account</div>
+    <div style="line-height: 2; font-size: 0.88rem;">
+      <div class="line-step">1️⃣ เข้าไปที่ <strong>https://manager.line.biz</strong> แล้ว Login ด้วยบัญชี LINE ของ HR</div>
+      <div class="line-step">2️⃣ คลิก "สร้างบัญชี" → เลือก "LINE Official Account" → กรอกชื่อบัญชี เช่น <strong>"HR Human CMU"</strong></div>
+      <div class="line-step">3️⃣ เลือกประเภทบัญชีเป็น "ฟรี" (สามารถอัปเกรดได้ภายหลัง)</div>
+      <div class="line-step">4️⃣ เสร็จสิ้น จะได้ LINE Official Account พร้อม QR Code ให้พนักงาน Scan เพิ่มเพื่อน</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📌 ขั้นตอนที่ 2: เปิดใช้งาน Messaging API</div>
+    <div style="line-height: 2; font-size: 0.88rem;">
+      <div class="line-step">1️⃣ ใน LINE Official Account Manager → ไปที่ <strong>การตั้งค่า → Messaging API</strong></div>
+      <div class="line-step">2️⃣ คลิก "เปิดใช้งาน Messaging API" → ยืนยัน</div>
+      <div class="line-step">3️⃣ ระบบจะสร้าง Provider อัตโนมัติ หรือเลือก Provider ที่มีอยู่แล้ว</div>
+      <div class="line-step">4️⃣ เมื่อเปิดใช้งานแล้ว จะเห็นหน้า <strong>LINE Developers Console</strong></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📌 ขั้นตอนที่ 3: รับ Channel Access Token</div>
+    <div style="line-height: 2; font-size: 0.88rem;">
+      <div class="line-step">1️⃣ เข้า <strong>https://developers.line.biz</strong> → เลือก Provider → เลือก Channel ที่สร้างไว้</div>
+      <div class="line-step">2️⃣ ไปที่แท็บ <strong>"Messaging API"</strong></div>
+      <div class="line-step">3️⃣ เลื่อนลงหา <strong>"Channel access token"</strong> → คลิก "Issue" เพื่อสร้าง Token</div>
+      <div class="line-step">4️⃣ Copy Token ที่ได้ (ยาวมาก เริ่มต้นด้วย xxxxxxxxxx...) บันทึกไว้ใช้ในขั้นตอนต่อไป</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📌 ขั้นตอนที่ 4: รับ User ID ของผู้รับแจ้งเตือน</div>
+    <div style="line-height: 2; font-size: 0.88rem;">
+      <div class="line-step">1️⃣ ผู้รับแจ้งเตือน (เจ้าหน้าที่ HR) ต้อง <strong>Add Official Account เป็นเพื่อน</strong> ก่อน</div>
+      <div class="line-step">2️⃣ ใน LINE Developers Console → Messaging API → เลื่อนลงหา <strong>"Your user ID"</strong></div>
+      <div class="line-step">3️⃣ Copy User ID (เริ่มต้นด้วย U...) หรือใช้ <strong>Group ID</strong> หากต้องการส่งเข้ากลุ่ม LINE</div>
+      <div class="line-step">4️⃣ สำหรับ Group ID: เพิ่ม Bot เข้า Group LINE แล้วใช้ Webhook เพื่อดึง Group ID</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📌 ขั้นตอนที่ 5: เพิ่มโค้ดส่ง LINE ใน Google Apps Script</div>
+    <div style="line-height: 2; font-size: 0.88rem;">
+      <div class="line-step">1️⃣ เปิด Google Apps Script ของโปรเจกต์นี้</div>
+      <div class="line-step">2️⃣ ไปที่ <strong>Project Settings → Script Properties</strong></div>
+      <div class="line-step">3️⃣ เพิ่ม Property:
+        <br><code style="background:#1a1a2e; color:#a0d585; padding:4px 8px; border-radius:4px; font-size:0.82rem; display:inline-block; margin-top:4px">LINE_TOKEN = [Channel Access Token ที่ได้จากข้อ 3]</code>
+        <br><code style="background:#1a1a2e; color:#a0d585; padding:4px 8px; border-radius:4px; font-size:0.82rem; display:inline-block; margin-top:4px">LINE_USER_ID = [User ID หรือ Group ID ที่ได้จากข้อ 4]</code>
+      </div>
+      <div class="line-step">4️⃣ โค้ดส่ง LINE จะถูกเรียกอัตโนมัติเมื่อบันทึกการลาในระบบ</div>
+    </div>
+  </div>
+
+  <div class="card" style="background: linear-gradient(135deg, #1a1a2e, #263B6A); color: white; border: none;">
+    <div class="card-title" style="color: var(--c1); border-bottom-color: rgba(238,250,189,0.3);">💻 ฟังก์ชัน sendLineNotification ที่ต้องเพิ่มใน GAS</div>
+    <pre style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 8px; font-size: 0.78rem; line-height: 1.6; overflow-x: auto; color: #a0d585; white-space: pre-wrap"><code>function sendLineNotification(message) {
+  const token = PropertiesService.getScriptProperties()
+                  .getProperty('LINE_TOKEN');
+  const userId = PropertiesService.getScriptProperties()
+                  .getProperty('LINE_USER_ID');
+  if (!token || !userId) return;
+
+  const payload = {
+    to: userId,
+    messages: [{ type: 'text', text: message }]
+  };
+
+  UrlFetchApp.fetch('https://api.line.me/v2/bot/message/push', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token
+    },
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  });
+}</code></pre>
+    <p style="font-size:0.8rem; opacity:0.7; margin-top:10px">⚠️ ฟังก์ชัน addLeaveRecord ใน GAS จะเรียก sendLineNotification() โดยอัตโนมัติ</p>
+  </div>
+</div>
+
+</div><!-- end .main -->
+
+<!-- EDIT MODAL -->
+<div id="edit-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title">✏️ แก้ไขข้อมูลการลา</div>
+    <input type="hidden" id="em-id">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>ชื่อ-สกุล</label>
+        <select id="em-emp"></select>
+      </div>
+      <div class="form-group">
+        <label>ประเภทการลา</label>
+        <select id="em-type"></select>
+      </div>
+      <div class="form-group full">
+        <label>สาเหตุการลา</label>
+        <textarea id="em-reason" rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label>วันที่ลา</label>
+        <input type="date" id="em-start">
+      </div>
+      <div class="form-group">
+        <label>ลาถึงวันที่</label>
+        <input type="date" id="em-end">
+      </div>
+      <div class="form-group">
+        <label>ประเภทวัน</label>
+        <select id="em-dtype">
+          <option value="full">เต็มวัน</option>
+          <option value="morning">ครึ่งวันเช้า</option>
+          <option value="afternoon">ครึ่งวันบ่าย</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>จำนวนวันลา</label>
+        <input type="number" id="em-days" step="0.5" min="0.5">
+      </div>
+      <div class="form-group">
+        <label>เบอร์โทรศัพท์</label>
+        <input type="tel" id="em-phone">
+      </div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="saveEdit()">💾 บันทึก</button>
+      <button class="btn btn-ghost" onclick="closeModal()">✕ ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════════════════
+const GAS = 'https://script.google.com/macros/s/AKfycbyXStGNzCokVmLucDDW12FIKlSUeECE5DRFvclD60c7gianFa6b-Vck2mFjTjfZAsc/exec';
+
+let employees  = [];
+let leaveTypes = [];
+let holidays   = [];
+let allRecords = [];
+let charts     = {};
+let editMode   = {}; // stores current edit context
+
+// ════════════════════════════════════════════════════════
+// JSONP
+// ════════════════════════════════════════════════════════
+function callGAS(params) {
+  return new Promise((res, rej) => {
+    const cb = '_cb_' + Date.now() + '_' + (Math.random()*1e6|0);
+    const qs = Object.entries({ ...params, callback: cb })
+      .map(([k,v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
+    const s = document.createElement('script');
+    s.src = GAS + '?' + qs;
+    const tm = setTimeout(() => { cleanup(); rej(new Error('Timeout – กรุณาตรวจสอบ GAS URL')); }, 30000);
+    window[cb] = d => { cleanup(); res(d); };
+    s.onerror  = () => { cleanup(); rej(new Error('Network error')); };
+    function cleanup() { clearTimeout(tm); delete window[cb]; s.remove(); }
+    document.body.appendChild(s);
+  });
+}
+
+// ════════════════════════════════════════════════════════
+// NAV
+// ════════════════════════════════════════════════════════
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'stats') loadStats();
+}
+
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+async function init() {
+  const banner = document.getElementById('sys-banner');
+  banner.style.display = 'block';
+  banner.textContent = '⚙️ กำลังเริ่มต้นระบบและเชื่อมต่อฐานข้อมูล...';
+
+  try {
+    await callGAS({ action: 'init' });
+    await Promise.all([loadEmps(), loadTypes(), loadHolsData()]);
+    await loadRecords();
+    banner.style.display = 'none';
+    document.getElementById('emp-count-badge').textContent = `พนักงาน ${employees.length} คน`;
+  } catch(e) {
+    banner.textContent = '❌ เชื่อมต่อไม่ได้ – ' + e.message;
+    banner.style.background = '#e74c3c';
+    console.error(e);
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// EMPLOYEES
+// ════════════════════════════════════════════════════════
+async function loadEmps() {
+  const r = await callGAS({ action: 'getEmployees' });
+  if (!r.success) return;
+  employees = r.data || [];
+  refreshEmpSelects();
+  renderEmpTable();
+  document.getElementById('emp-count-badge').textContent = `พนักงาน ${employees.length} คน`;
+}
+
+function refreshEmpSelects() {
+  ['lf-emp','f-emp','i-emp','em-emp'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const v = el.value;
+    const isFilter = id === 'f-emp';
+    el.innerHTML = isFilter ? '<option value="">ทั้งหมด</option>' : '<option value="">— เลือกพนักงาน —</option>';
+    employees.forEach(e => {
+      const o = document.createElement('option');
+      o.value = e['รหัสพนักงาน'];
+      o.textContent = e['รหัสพนักงาน'] + ' – ' + e['ชื่อ-นามสกุล'];
+      o.dataset.name = e['ชื่อ-นามสกุล'];
+      o.dataset.start = e['วันที่เริ่มงาน'] || '';
+      el.appendChild(o);
+    });
+    if (v) el.value = v;
+  });
+}
+
+function renderEmpTable() {
+  document.getElementById('emp-tbody').innerHTML =
+    employees.length === 0
+    ? '<tr><td colspan="5" class="no-data">ไม่มีข้อมูลพนักงาน</td></tr>'
+    : employees.map((e,i) => `
+        <tr>
+          <td>${i+1}</td>
+          <td><strong>${e['รหัสพนักงาน']}</strong></td>
+          <td>${e['ชื่อ-นามสกุล']}</td>
+          <td>${fmtThai(e['วันที่เริ่มงาน'])}</td>
+          <td>
+            <button class="btn btn-warning btn-sm" onclick="editEmp('${e['รหัสพนักงาน']}')">✏️ แก้ไข</button>
+            <button class="btn btn-danger btn-sm" onclick="delEmp('${e['รหัสพนักงาน']}','${e['ชื่อ-นามสกุล']}')">🗑️</button>
+          </td>
+        </tr>`).join('');
+}
+
+function togglePanel(panelId, title, mode) {
+  const p = document.getElementById(panelId);
+  if (p.classList.contains('show') && editMode[panelId] === mode) {
+    p.classList.remove('show'); return;
+  }
+  editMode[panelId] = mode;
+  const titleEl = document.getElementById(panelId + '-title');
+  if (titleEl) titleEl.textContent = title;
+  p.classList.add('show');
+  // Clear fields
+  if (panelId === 'emp-panel') {
+    document.getElementById('ep-id').value = '';
+    document.getElementById('ep-id').disabled = false;
+    document.getElementById('ep-name').value = '';
+    document.getElementById('ep-date').value = '';
+  }
+  if (panelId === 'lt-panel') {
+    document.getElementById('ltp-id').value = '';
+    document.getElementById('ltp-id').disabled = false;
+    document.getElementById('ltp-name').value = '';
+    document.getElementById('ltp-max').value = '';
+    document.getElementById('ltp-notes').value = '';
+  }
+}
+
+function closePanel(panelId) {
+  document.getElementById(panelId).classList.remove('show');
+  delete editMode[panelId];
+}
+
+function editEmp(id) {
+  const emp = employees.find(e => e['รหัสพนักงาน'] === id);
+  if (!emp) return;
+  editMode['emp-panel'] = 'edit';
+  document.getElementById('emp-panel-title').textContent = '✏️ แก้ไขข้อมูลพนักงาน';
+  document.getElementById('ep-id').value = emp['รหัสพนักงาน'];
+  document.getElementById('ep-id').disabled = true;
+  document.getElementById('ep-name').value = emp['ชื่อ-นามสกุล'];
+  document.getElementById('ep-date').value = emp['วันที่เริ่มงาน'] || '';
+  document.getElementById('emp-panel').classList.add('show');
+}
+
+async function saveEmployee() {
+  const id = document.getElementById('ep-id').value.trim();
+  const name = document.getElementById('ep-name').value.trim();
+  const startDate = document.getElementById('ep-date').value;
+  if (!id || !name || !startDate) {
+    return Swal.fire({ icon:'warning', title:'กรุณากรอกข้อมูลให้ครบถ้วน', confirmButtonColor: '#263B6A' });
+  }
+  const isEdit = document.getElementById('ep-id').disabled;
+  try {
+    Swal.fire({ title:'กำลังบันทึก...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
+    const r = await callGAS({ action: isEdit?'updateEmployee':'addEmployee', id, name, startDate });
+    if (r.success) {
+      await loadEmps(); closePanel('emp-panel');
+      Swal.fire({ icon:'success', title:'บันทึกสำเร็จ!', timer:1800, showConfirmButton:false });
+    } else Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:r.message });
+  } catch(e) { Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:e.message }); }
+}
+
+async function delEmp(id, name) {
+  const c = await Swal.fire({
+    icon:'warning', title:'ยืนยันการลบ', text:`ลบพนักงาน "${name}" ใช่หรือไม่?`,
+    showCancelButton:true, confirmButtonText:'ลบ', cancelButtonText:'ยกเลิก', confirmButtonColor:'#e74c3c',
+  });
+  if (!c.isConfirmed) return;
+  try {
+    Swal.fire({ title:'กำลังลบ...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
+    const r = await callGAS({ action:'deleteEmployee', id });
+    if (r.success) { await loadEmps(); Swal.fire({ icon:'success', title:'ลบสำเร็จ', timer:1500, showConfirmButton:false }); }
+    else Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:r.message });
+  } catch(e) { Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:e.message }); }
+}
+
+// ════════════════════════════════════════════════════════
+// LEAVE TYPES
+// ════════════════════════════════════════════════════════
+async function loadTypes() {
+  const r = await callGAS({ action:'getLeaveTypes' });
+  if (!r.success) return;
+  leaveTypes = r.data || [];
+  refreshTypeSelects();
+  renderLtTable();
+}
+
+function refreshTypeSelects() {
+  ['lf-type','em-type'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const v = el.value;
+    el.innerHTML = '<option value="">— เลือกประเภทการลา —</option>';
+    leaveTypes.forEach(lt => {
+      const o = document.createElement('option');
+      o.value = lt['รหัส'];
+      o.textContent = lt['ชื่อประเภทการลา'];
+      o.dataset.max = lt['วันสูงสุด'] || 0;
+      o.dataset.notes = lt['หมายเหตุ'] || '';
+      o.dataset.name = lt['ชื่อประเภทการลา'];
+      el.appendChild(o);
+    });
+    if (v) el.value = v;
+  });
+}
+
+function renderLtTable() {
+  document.getElementById('lt-tbody').innerHTML =
+    leaveTypes.length === 0
+    ? '<tr><td colspan="5" class="no-data">ไม่มีข้อมูลประเภทการลา</td></tr>'
+    : leaveTypes.map(lt => `
+        <tr>
+          <td><strong>${lt['รหัส']}</strong></td>
+          <td>${lt['ชื่อประเภทการลา']}</td>
+          <td class="text-center">${lt['วันสูงสุด']} วัน</td>
+          <td style="font-size:0.8rem; color:#666; max-width:300px">${lt['หมายเหตุ']||'—'}</td>
+          <td>
+            <button class="btn btn-warning btn-sm" onclick="editLt('${lt['รหัส']}')">✏️ แก้ไข</button>
+            <button class="btn btn-danger btn-sm" onclick="delLt('${lt['รหัส']}','${lt['ชื่อประเภทการลา']}')">🗑️</button>
+          </td>
+        </tr>`).join('');
+}
+
+function editLt(id) {
+  const lt = leaveTypes.find(l => l['รหัส'] === id);
+  if (!lt) return;
+  editMode['lt-panel'] = 'edit';
+  document.getElementById('lt-panel-title').textContent = '✏️ แก้ไขประเภทการลา';
+  document.getElementById('ltp-id').value = lt['รหัส'];
+  document.getElementById('ltp-id').disabled = true;
+  document.getElementById('ltp-name').value = lt['ชื่อประเภทการลา'];
+  document.getElementById('ltp-max').value = lt['วันสูงสุด'] || '';
+  document.getElementById('ltp-notes').value = lt['หมายเหตุ'] || '';
+  document.getElementById('lt-panel').classList.add('show');
+}
+
+async function saveLeaveType() {
+  const id = document.getElementById('ltp-id').value.trim();
+  const name = document.getElementById('ltp-name').value.trim();
+  const maxDays = document.getElementById('ltp-max').value;
+  const notes = document.getElementById('ltp-notes').value.trim();
+  if (!id || !name) return Swal.fire({ icon:'warning', title:'กรุณากรอกข้อมูลให้ครบ' });
+  const isEdit = document.getElementById('ltp-id').disabled;
+  try {
+    Swal.fire({ title:'กำลังบันทึก...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
+    const r = await callGAS({ action: isEdit?'updateLeaveType':'addLeaveType', id, name, maxDays, notes });
+    if (r.success) {
+      await loadTypes(); closePanel('lt-panel');
+      Swal.fire({ icon:'success', title:'บันทึกสำเร็จ!', timer:1800, showConfirmButton:false });
+    } else Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:r.message });
+  } catch(e) { Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:e.message }); }
+}
+
+async function delLt(id, name) {
+  const c = await Swal.fire({
+    icon:'warning', title:'ยืนยันการลบ', text:`ลบประเภทการลา "${name}"?`,
+    showCancelButton:true, confirmButtonText:'ลบ', cancelButtonText:'ยกเลิก', confirmButtonColor:'#e74c3c',
+  });
+  if (!c.isConfirmed) return;
+  try {
+    Swal.fire({ title:'กำลังลบ...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
+    const r = await callGAS({ action:'deleteLeaveType', id });
+    if (r.success) { await loadTypes(); Swal.fire({ icon:'success', title:'ลบสำเร็จ', timer:1500, showConfirmButton:false }); }
+    else Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:r.message });
+  } catch(e) { Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:e.message }); }
+}
+
+// ════════════════════════════════════════════════════════
+// HOLIDAYS
+// ════════════════════════════════════════════════════════
+async function loadHolsData() {
+  const r = await callGAS({ action:'getHolidays' });
+  if (!r.success) return;
+  const data = r.data || [];
+  holidays = data.map(h => h['วันที่']);
+  renderHolTable(data);
+}
+
+function renderHolTable(data) {
+  const days = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+  const sorted = [...data].sort((a,b) => (a['วันที่'] > b['วันที่'] ? 1 : -1));
+  document.getElementById('hol-tbody').innerHTML =
+    sorted.length === 0
+    ? '<tr><td colspan="4" class="no-data">ไม่มีข้อมูลวันหยุด</td></tr>'
+    : sorted.map(h => {
+        const d = new Date(h['วันที่']);
+        const dayName = isNaN(d) ? '' : days[d.getDay()];
+        return `<tr>
+          <td>${fmtThai(h['วันที่'])}</td>
+          <td>${h['ชื่อวันหยุด']}</td>
+          <td><span class="badge" style="background:var(--c1);color:var(--c4)">${dayName}</span></td>
+          <td><button class="btn btn-danger btn-sm" onclick="delHol('${h['วันที่']}')">🗑️</button></td>
+        </tr>`;
+      }).join('');
+}
+
+async function addHoliday() {
+  const date = document.getElementById('h-date').value;
+  const name = document.getElementById('h-name').value.trim();
+  if (!date || !name) return Swal.fire({ icon:'warning', title:'กรุณากรอกข้อมูลให้ครบ' });
+  try {
+    Swal.fire({ title:'กำลังบันทึก...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
+    const r = await callGAS({ action:'addHoliday', date, name });
+    if (r.success) {
+      document.getElementById('h-date').value = '';
+      document.getElementById('h-name').value = '';
+      await loadHolsData();
+      Swal.fire({ icon:'success', title:'เพิ่มวันหยุดสำเร็จ', timer:1500, showConfirmButton:false });
+    }
+  } catch(e) { Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:e.message }); }
+}
+
+async function delHol(date) {
+  const c = await Swal.fire({
+    icon:'warning', title:'ยืนยันการลบ', text:`ลบวันหยุด ${fmtThai(date)}?`,
+    showCancelButton:true, confirmButtonText:'ลบ', cancelButtonText:'ยกเลิก', confirmButtonColor:'#e74c3c',
+  });
+  if (!c.isConfirmed) return;
+  try {
+    Swal.fire({ title:'กำลังลบ...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
+    const r = await callGAS({ action:'deleteHoliday', date });
+    if (r.success) { await loadHolsData(); Swal.fire({ icon:'success', title:'ลบสำเร็จ', timer:1500, showConfirmButton:false }); }
+  } catch(e) { Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:e.message }); }
+}
+
+// ════════════════════════════════════════════════════════
+// LEAVE FORM
+// ════════════════════════════════════════════════════════
+function onEmpChange() { /* could add validation hints */ }
+
+function onTypeChange() {
+  const sel = document.getElementById('lf-type');
+  const opt = sel.selectedOptions[0];
+  const infoDiv = document.getElementById('lf-info');
+  const isAnnual = opt && (opt.dataset.name || '').includes('พักผ่อน');
+  document.getElementById('grp-sub').style.display = isAnnual ? 'block' : 'none';
+  if (opt && opt.dataset.notes) {
+    infoDiv.textContent = 'ℹ️ ' + opt.dataset.notes;
+    infoDiv.classList.add('show');
+  } else {
+    infoDiv.classList.remove('show');
+  }
+  calcDays();
+}
+
+function calcDays() {
+  const s = document.getElementById('lf-start').value;
+  const e = document.getElementById('lf-end').value;
+  const dt = document.querySelector('input[name="daytype"]:checked')?.value || 'full';
+  if (!s || !e) { document.getElementById('lf-days').value = 0; return; }
+  const d = workDays(s, e, dt);
+  document.getElementById('lf-days').value = d;
+}
+
+function workDays(start, end, dtype) {
+  const s = new Date(start), e = new Date(end);
+  if (s > e) return 0;
+  let count = 0;
+  const cur = new Date(s);
+  while (cur <= e) {
+    const dow = cur.getDay();
+    const ds = cur.toISOString().split('T')[0];
+    if (dow !== 0 && dow !== 6 && !holidays.includes(ds)) count++;
+    cur.setDate(cur.getDate() + 1);
+  }
+  if ((dtype === 'morning' || dtype === 'afternoon') && count === 1) return 0.5;
+  return count;
+}
+
+async function submitLeave() {
+  const empSel = document.getElementById('lf-emp');
+  const typeSel = document.getElementById('lf-type');
+  const empId = empSel.value;
+  const empName = empSel.selectedOptions[0]?.dataset.name || '';
+  const typeId = typeSel.value;
+  const typeName = typeSel.selectedOptions[0]?.dataset.name || '';
+  const reason = document.getElementById('lf-reason').value.trim();
+  const start = document.getElementById('lf-start').value;
+  const end = document.getElementById('lf-end').value;
+  const dt = document.querySelector('input[name="daytype"]:checked')?.value || 'full';
+  const days = document.getElementById('lf-days').value;
+  const phone = document.getElementById('lf-phone').value.trim();
+  const sub = document.getElementById('lf-sub').value.trim();
+
+  if (!empId || !typeId || !reason || !start || !end || !phone) {
+    return Swal.fire({ icon:'warning', title:'กรุณากรอกข้อมูลให้ครบถ้วน', confirmButtonColor:'#263B6A' });
+  }
+  if (new Date(start) > new Date(end)) {
+    return Swal.fire({ icon:'warning', title:'วันที่ไม่ถูกต้อง', text:'วันที่เริ่มลาต้องไม่เกินวันสิ้นสุด' });
+  }
+
+  // Anti-backdating (ยกเว้นลาป่วย)
+  const today = new Date(); today.setHours(0,0,0,0);
+  if (new Date(start) < today && !typeName.includes('ป่วย')) {
+    return Swal.fire({
+      icon:'warning',
+      title:'ไม่อนุญาตลาย้อนหลัง',
+      text:'ยกเว้นการลาป่วย ระบบไม่อนุญาตให้บันทึกการลาที่ผ่านมาแล้ว',
+      confirmButtonColor:'#263B6A'
+    });
+  }
+
+  if (parseFloat(days) <= 0) {
+    return Swal.fire({ icon:'warning', title:'จำนวนวันลาเป็น 0', text:'วันที่เลือกอาจเป็นวันหยุด กรุณาตรวจสอบ' });
+  }
+
+  try {
+    Swal.fire({ title:'⏳ กำลังบันทึกข้อมูล...', text:'กรุณารอสักครู่', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
+    const r = await callGAS({
+      action:'addLeaveRecord', empId, empName, typeName, reason, start, end, dtype: dt, days, phone, sub
+    });
+    if (r.success) {
+      await loadRecords();
+      resetForm();
+      Swal.fire({
+        icon:'success',
+        title:'✅ บันทึกการลาสำเร็จ!',
+        html:`
+          <div style="text-align:left; font-family:'Noto Sans Thai',sans-serif; font-size:0.9rem; line-height:2">
+            <b>รหัสการลา:</b> ${r.id}<br>
+            <b>พนักงาน:</b> ${empName}<br>
+            <b>ประเภท:</b> ${typeName}<br>
+            <b>วันที่:</b> ${fmtThai(start)} – ${fmtThai(end)}<br>
+            <b>จำนวน:</b> ${days} วันทำการ<br>
+            <hr style="margin:10px 0">
+            <p style="color:#e67e22; font-size:0.82rem">📱 กรุณาแจ้งการอนุมัติใบลาผ่าน LINE Official: <b>HR Human CMU</b></p>
+          </div>`,
+        confirmButtonColor:'#263B6A',
+        confirmButtonText:'ตกลง'
+      });
+    } else Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:r.message });
+  } catch(e) { Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:e.message }); }
+}
+
+function resetForm() {
+  ['lf-emp','lf-type','lf-reason','lf-start','lf-end','lf-phone','lf-sub'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.querySelector('input[name="daytype"][value="full"]').checked = true;
+  document.getElementById('lf-days').value = 0;
+  document.getElementById('lf-info').classList.remove('show');
+  document.getElementById('grp-sub').style.display = 'none';
+}
+
+// ════════════════════════════════════════════════════════
+// RECORDS
+// ════════════════════════════════════════════════════════
+async function loadRecords() {
+  const s = document.getElementById('f-start').value;
+  const e = document.getElementById('f-end').value;
+  const emp = document.getElementById('f-emp').value;
+  const p = { action:'getLeaveRecords' };
+  if (s) p.startDate = s;
+  if (e) p.endDate = e;
+  if (emp) p.employeeId = emp;
+  try {
+    const r = await callGAS(p);
+    if (r.success) { allRecords = r.data || []; renderRecords(); }
+  } catch(err) { console.error(err); }
+}
+
+function renderRecords() {
+  const dtMap = { full:'เต็มวัน', morning:'ครึ่งเช้า', afternoon:'ครึ่งบ่าย' };
+  document.getElementById('rec-tbody').innerHTML =
+    allRecords.length === 0
+    ? '<tr><td colspan="9" class="no-data">ไม่พบข้อมูลการลา</td></tr>'
+    : allRecords.map(r => `
+        <tr>
+          <td><small style="color:#999">${r['รหัสการลา']||''}</small></td>
+          <td>${r['ชื่อพนักงาน']||''}</td>
+          <td><span class="badge" style="${badgeStyle(r['ประเภทการลา'])}">${r['ประเภทการลา']||''}</span></td>
+          <td>${fmtThai(r['วันที่ลา'])}</td>
+          <td>${fmtThai(r['ลาถึงวันที่'])}</td>
+          <td>${dtMap[r['ประเภทวัน']]||r['ประเภทวัน']||'เต็มวัน'}</td>
+          <td><strong>${r['จำนวนวันลา']||0}</strong></td>
+          <td>${r['เบอร์โทรศัพท์']||'—'}</td>
+          <td>
+            <button class="btn btn-warning btn-xs" onclick="openEdit('${r['รหัสการลา']}')">✏️</button>
+            <button class="btn btn-danger btn-xs" onclick="delRecord('${r['รหัสการลา']}')">🗑️</button>
+          </td>
+        </tr>`).join('');
+}
+
+function openEdit(id) {
+  const rec = allRecords.find(r => r['รหัสการลา'] === id);
+  if (!rec) return;
+  document.getElementById('em-id').value   = rec['รหัสการลา'];
+  document.getElementById('em-emp').value  = rec['รหัสพนักงาน'];
+  const ltSel = document.getElementById('em-type');
+  const ltOpt = Array.from(ltSel.options).find(o => o.dataset.name === rec['ประเภทการลา']);
+  if (ltOpt) ltSel.value = ltOpt.value;
+  document.getElementById('em-reason').value = rec['สาเหตุการลา'] || '';
+  document.getElementById('em-start').value  = rec['วันที่ลา'] || '';
+  document.getElementById('em-end').value    = rec['ลาถึงวันที่'] || '';
+  document.getElementById('em-dtype').value  = rec['ประเภทวัน'] || 'full';
+  document.getElementById('em-days').value   = rec['จำนวนวันลา'] || 1;
+  document.getElementById('em-phone').value  = rec['เบอร์โทรศัพท์'] || '';
+  document.getElementById('edit-modal').style.display = 'block';
+}
+function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
+
+async function saveEdit() {
+  const id = document.getElementById('em-id').value;
+  const empSel = document.getElementById('em-emp');
+  const typeSel = document.getElementById('em-type');
+  try {
+    Swal.fire({ title:'กำลังบันทึก...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
+    const r = await callGAS({
+      action:'updateLeaveRecord',
+      id,
+      empId:   empSel.value,
+      empName: empSel.selectedOptions[0]?.dataset.name || '',
+      typeName:typeSel.selectedOptions[0]?.dataset.name || '',
+      reason:  document.getElementById('em-reason').value,
+      start:   document.getElementById('em-start').value,
+      end:     document.getElementById('em-end').value,
+      dtype:   document.getElementById('em-dtype').value,
+      days:    document.getElementById('em-days').value,
+      phone:   document.getElementById('em-phone').value,
+    });
+    if (r.success) {
+      await loadRecords(); closeModal();
+      Swal.fire({ icon:'success', title:'แก้ไขสำเร็จ!', timer:1500, showConfirmButton:false });
+    } else Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:r.message });
+  } catch(e) { Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:e.message }); }
+}
+
+async function delRecord(id) {
+  const c = await Swal.fire({
+    icon:'warning', title:'ยืนยันการลบ', text:'ต้องการลบรายการลานี้ใช่หรือไม่?',
+    showCancelButton:true, confirmButtonText:'ลบ', cancelButtonText:'ยกเลิก', confirmButtonColor:'#e74c3c',
+  });
+  if (!c.isConfirmed) return;
+  try {
+    Swal.fire({ title:'กำลังลบ...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
+    const r = await callGAS({ action:'deleteLeaveRecord', id });
+    if (r.success) { await loadRecords(); Swal.fire({ icon:'success', title:'ลบสำเร็จ', timer:1500, showConfirmButton:false }); }
+  } catch(e) { Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:e.message }); }
+}
+
+// ════════════════════════════════════════════════════════
+// STATISTICS
+// ════════════════════════════════════════════════════════
+async function loadStats() {
+  const s = document.getElementById('s-start').value;
+  const e = document.getElementById('s-end').value;
+  const p = { action:'getLeaveStats' };
+  if (s) p.startDate = s; if (e) p.endDate = e;
+  try {
+    Swal.fire({ title:'กำลังโหลดสถิติ...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
+    const r = await callGAS(p);
+    Swal.close();
+    if (r.success) renderStats(r.data);
+  } catch(e) { Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:e.message }); }
+}
+
+function renderStats(data) {
+  const { records=[], byType={}, byEmployee={} } = data;
+  const total = Object.values(byType).reduce((s,v)=>s+v,0);
+
+  document.getElementById('st-summary').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${records.length}</div><div class="stat-lbl">รายการทั้งหมด</div></div>
+    <div class="stat-card"><div class="stat-num">${total.toFixed(1)}</div><div class="stat-lbl">รวมวันลา</div></div>
+    <div class="stat-card"><div class="stat-num">${Object.keys(byEmployee).length}</div><div class="stat-lbl">พนักงานที่ลา</div></div>
+    ${Object.entries(byType).slice(0,4).map(([t,d])=>`<div class="stat-card" style="border-top-color:var(--c2)"><div class="stat-num" style="font-size:1.6rem">${d}</div><div class="stat-lbl">${t.length>10?t.slice(0,10)+'…':t}</div></div>`).join('')}
+  `;
+
+  const types = Object.keys(byType), vals = Object.values(byType);
+  const COLORS = ['#74b9ff','#fd79a8','#a29bfe','#55efc4','#ffeaa7','#fdcb6e','#e17055','#00b894','#6c5ce7','#0984e3'];
+
+  destroyChart('ch-pie');
+  charts['ch-pie'] = new Chart(document.getElementById('ch-pie'), {
+    type:'doughnut',
+    data:{ labels:types, datasets:[{ data:vals, backgroundColor:COLORS, borderWidth:3, borderColor:'white' }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ font:{family:'Noto Sans Thai',size:11}, padding:10 } } } }
+  });
+
+  destroyChart('ch-bar');
+  charts['ch-bar'] = new Chart(document.getElementById('ch-bar'), {
+    type:'bar',
+    data:{ labels:types, datasets:[{ label:'วันลา', data:vals, backgroundColor:COLORS, borderRadius:6, borderSkipped:false }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{font:{family:'Noto Sans Thai'}} }, x:{ ticks:{ font:{family:'Noto Sans Thai',size:10}, maxRotation:30 } } } }
+  });
+
+  const empNames = Object.keys(byEmployee);
+  const empVals  = empNames.map(n => byEmployee[n].total);
+  destroyChart('ch-emp');
+  charts['ch-emp'] = new Chart(document.getElementById('ch-emp'), {
+    type:'bar',
+    data:{ labels:empNames, datasets:[{ label:'รวมวันลา', data:empVals, backgroundColor:'#6984A9', borderRadius:5 }] },
+    options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{ legend:{ display:false } }, scales:{ x:{ beginAtZero:true, ticks:{font:{family:'Noto Sans Thai'}} }, y:{ ticks:{ font:{family:'Noto Sans Thai',size:11} } } } }
+  });
+
+  // Summary table
+  const typeKeys = Object.keys(byType);
+  const catMatch = (name, kw) => name && name.includes(kw);
+  document.getElementById('st-tbody').innerHTML =
+    Object.entries(byEmployee).map(([name, info]) => {
+      const sick  = typeKeys.filter(t=>catMatch(t,'ป่วย')).reduce((s,t)=>s+(info.types[t]||0),0);
+      const mat   = typeKeys.filter(t=>catMatch(t,'คลอด')&&!catMatch(t,'ช่วย')).reduce((s,t)=>s+(info.types[t]||0),0);
+      const help  = typeKeys.filter(t=>catMatch(t,'ช่วยภริยา')).reduce((s,t)=>s+(info.types[t]||0),0);
+      const pers  = typeKeys.filter(t=>catMatch(t,'กิจส่วนตัว')).reduce((s,t)=>s+(info.types[t]||0),0);
+      const spec  = typeKeys.filter(t=>catMatch(t,'กิจพิเศษ')).reduce((s,t)=>s+(info.types[t]||0),0);
+      const ann   = typeKeys.filter(t=>catMatch(t,'พักผ่อน')).reduce((s,t)=>s+(info.types[t]||0),0);
+      return `<tr><td>${name}</td><td>${sick||'—'}</td><td>${mat||'—'}</td><td>${help||'—'}</td><td>${pers||'—'}</td><td>${spec||'—'}</td><td>${ann||'—'}</td><td><strong>${info.total}</strong></td></tr>`;
+    }).join('');
+}
+
+// ════════════════════════════════════════════════════════
+// INDIVIDUAL STATS
+// ════════════════════════════════════════════════════════
+async function loadIndividual() {
+  const empId = document.getElementById('i-emp').value;
+  const year  = document.getElementById('i-year').value;
+  if (!empId) return Swal.fire({ icon:'warning', title:'กรุณาเลือกพนักงาน' });
+  try {
+    Swal.fire({ title:'กำลังโหลดข้อมูล...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
+    const r = await callGAS({ action:'getIndividualStats', employeeId:empId, year });
+    Swal.close();
+    if (r.success) {
+      document.getElementById('i-content').style.display = 'block';
+      renderIndividual(r.data, empId);
+    }
+  } catch(e) { Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:e.message }); }
+}
+
+function renderIndividual(data, empId) {
+  const { records=[], byType={}, totalDays=0 } = data;
+  const emp = employees.find(e => e['รหัสพนักงาน'] === empId) || {};
+
+  document.getElementById('i-summary').innerHTML = `
+    <div class="stat-card" style="grid-column:1/-1; text-align:left; border-top-color:var(--c4)">
+      <div style="font-weight:700; font-size:1rem; color:var(--c4)">👤 ${emp['ชื่อ-นามสกุล']||empId}</div>
+      <div style="font-size:0.78rem; color:#888; margin-top:3px">รหัส: ${empId} | เริ่มงาน: ${fmtThai(emp['วันที่เริ่มงาน']||'')}</div>
+    </div>
+    <div class="stat-card"><div class="stat-num">${records.length}</div><div class="stat-lbl">รายการลา</div></div>
+    <div class="stat-card"><div class="stat-num">${totalDays}</div><div class="stat-lbl">รวมวันลา</div></div>
+    ${Object.entries(byType).map(([t,d])=>`<div class="stat-card" style="border-top-color:var(--c2)"><div class="stat-num" style="font-size:1.4rem">${d}</div><div class="stat-lbl">${t.length>12?t.slice(0,12)+'…':t}</div></div>`).join('')}
+  `;
+
+  const typeKeys = Object.keys(byType), typeVals = Object.values(byType);
+  const COLORS = ['#74b9ff','#fd79a8','#a29bfe','#55efc4','#ffeaa7','#fdcb6e','#e17055'];
+
+  destroyChart('i-pie');
+  if (typeKeys.length > 0) {
+    charts['i-pie'] = new Chart(document.getElementById('i-pie'), {
+      type:'doughnut',
+      data:{ labels:typeKeys, datasets:[{ data:typeVals, backgroundColor:COLORS, borderWidth:3, borderColor:'white' }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ font:{family:'Noto Sans Thai',size:11} } } } }
+    });
+  }
+  destroyChart('i-bar');
+  if (typeKeys.length > 0) {
+    charts['i-bar'] = new Chart(document.getElementById('i-bar'), {
+      type:'bar',
+      data:{ labels:typeKeys, datasets:[{ data:typeVals, backgroundColor:COLORS, borderRadius:6, borderSkipped:false }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{font:{family:'Noto Sans Thai'}} }, x:{ ticks:{ font:{family:'Noto Sans Thai',size:10}, maxRotation:30 } } } }
+    });
+  }
+
+  // Quota table
+  document.getElementById('i-quota').innerHTML = leaveTypes.map(lt => {
+    const used = parseFloat(byType[lt['ชื่อประเภทการลา']] || 0);
+    const max  = parseFloat(lt['วันสูงสุด'] || 0);
+    const rem  = Math.max(0, max - used);
+    const pct  = max > 0 ? Math.min(100, (used/max*100)) : 0;
+    const col  = pct >= 100 ? '#e74c3c' : pct >= 80 ? '#f39c12' : '#27ae60';
+    return `<tr>
+      <td>${lt['ชื่อประเภทการลา']}</td>
+      <td>${max} วัน</td>
+      <td>${used} วัน</td>
+      <td><strong style="color:${col}">${rem} วัน</strong></td>
+      <td>
+        <div class="quota-bar"><div class="quota-fill" style="background:${col};width:${pct}%"></div></div>
+        <small style="color:${col}; margin-left:6px">${pct.toFixed(0)}%</small>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // History
+  document.getElementById('i-hist').innerHTML = records.length === 0
+    ? '<tr><td colspan="6" class="no-data">ไม่มีประวัติการลา</td></tr>'
+    : records.map(r => `<tr>
+        <td><span class="badge" style="${badgeStyle(r['ประเภทการลา'])}">${r['ประเภทการลา']||''}</span></td>
+        <td style="max-width:200px; font-size:0.82rem">${r['สาเหตุการลา']||'—'}</td>
+        <td>${fmtThai(r['วันที่ลา'])}</td>
+        <td>${fmtThai(r['ลาถึงวันที่'])}</td>
+        <td><strong>${r['จำนวนวันลา']||0}</strong></td>
+        <td>
+          <button class="btn btn-warning btn-xs" onclick="openEdit('${r['รหัสการลา']}')">✏️</button>
+          <button class="btn btn-danger btn-xs" onclick="delRecord('${r['รหัสการลา']}')">🗑️</button>
+        </td>
+      </tr>`).join('');
+}
+
+// ════════════════════════════════════════════════════════
+// EXPORT
+// ════════════════════════════════════════════════════════
+function exportCSV() {
+  if (!allRecords.length) return Swal.fire({ icon:'info', title:'ไม่มีข้อมูล' });
+  const headers = ['รหัสการลา','รหัสพนักงาน','ชื่อพนักงาน','ประเภทการลา','สาเหตุการลา','วันที่ลา','ลาถึงวันที่','ประเภทวัน','จำนวนวันลา','เบอร์โทรศัพท์'];
+  const rows = allRecords.map(r => headers.map(h => `"${r[h]||''}"`));
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'})),
+    download: 'leave_records_' + new Date().toISOString().split('T')[0] + '.csv'
+  });
+  a.click();
+}
+
+// ════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════
+function fmtThai(ds) {
+  if (!ds) return '—';
+  const d = new Date(ds);
+  if (isNaN(d)) return ds;
+  const M = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return `${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear()+543}`;
+}
+
+function badgeStyle(type) {
+  if (!type) return 'background:#e0e0e0;color:#333';
+  if (type.includes('ป่วย'))           return 'background:#ffeaa7;color:#6c5ce7';
+  if (type.includes('คลอด'))           return 'background:#fd79a8;color:white';
+  if (type.includes('ช่วยภริยา'))      return 'background:#00b894;color:white';
+  if (type.includes('กิจส่วนตัว'))     return 'background:#a29bfe;color:white';
+  if (type.includes('พักผ่อน'))        return 'background:#74b9ff;color:white';
+  if (type.includes('กิจพิเศษ'))       return 'background:#55efc4;color:#2d3436';
+  return 'background:#dfe6e9;color:#636e72';
+}
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+// Close modal on overlay click
+document.getElementById('edit-modal').addEventListener('click', e => { if(e.target === e.currentTarget) closeModal(); });
+
+// ════════════════════════════════════════════════════════
+// START
+// ════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
