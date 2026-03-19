@@ -867,7 +867,7 @@ tbody tr:nth-child(even):hover td { background: #f0f6ff; }
 // ════════════════════════════════════════════════════════
 // CONFIG
 // ════════════════════════════════════════════════════════
-const GAS = 'https://script.google.com/macros/s/AKfycbwpIwiaNjFlnjc2rg0D0BIUzM28KODoRQ0DG-N90UNW57udRuUFfhKyLlMkq1wr8ZX5/exec';
+const GAS = 'https://script.google.com/macros/s/AKfycbyXStGNzCokVmLucDDW12FIKlSUeECE5DRFvclD60c7gianFa6b-Vck2mFjTjfZAsc/exec';
 
 let employees  = [];
 let leaveTypes = [];
@@ -931,7 +931,7 @@ async function init() {
 // ════════════════════════════════════════════════════════
 async function loadEmps() {
   const r = await callGAS({ action: 'getEmployees' });
-  if (!r.success) return;
+  if (r.status !== 'ok') return;
   employees = r.data || [];
   refreshEmpSelects();
   renderEmpTable();
@@ -947,10 +947,10 @@ function refreshEmpSelects() {
     el.innerHTML = isFilter ? '<option value="">ทั้งหมด</option>' : '<option value="">— เลือกพนักงาน —</option>';
     employees.forEach(e => {
       const o = document.createElement('option');
-      o.value = e['รหัสพนักงาน'];
-      o.textContent = e['รหัสพนักงาน'] + ' – ' + e['ชื่อ-นามสกุล'];
-      o.dataset.name = e['ชื่อ-นามสกุล'];
-      o.dataset.start = e['วันที่เริ่มงาน'] || '';
+      o.value = e.id;
+      o.textContent = e.id + ' – ' + e.name;
+      o.dataset.name = e.name;
+      o.dataset.start = e.startDate || '';
       el.appendChild(o);
     });
     if (v) el.value = v;
@@ -964,12 +964,12 @@ function renderEmpTable() {
     : employees.map((e,i) => `
         <tr>
           <td>${i+1}</td>
-          <td><strong>${e['รหัสพนักงาน']}</strong></td>
-          <td>${e['ชื่อ-นามสกุล']}</td>
-          <td>${fmtThai(e['วันที่เริ่มงาน'])}</td>
+          <td><strong>${e.id}</strong></td>
+          <td>${e.name}</td>
+          <td>${fmtThai(e.startDate)}</td>
           <td>
-            <button class="btn btn-warning btn-sm" onclick="editEmp('${e['รหัสพนักงาน']}')">✏️ แก้ไข</button>
-            <button class="btn btn-danger btn-sm" onclick="delEmp('${e['รหัสพนักงาน']}','${e['ชื่อ-นามสกุล']}')">🗑️</button>
+            <button class="btn btn-warning btn-sm" onclick="editEmp('${e.id}')">✏️ แก้ไข</button>
+            <button class="btn btn-danger btn-sm" onclick="delEmp('${e.id}','${e.name}')">🗑️</button>
           </td>
         </tr>`).join('');
 }
@@ -1005,14 +1005,14 @@ function closePanel(panelId) {
 }
 
 function editEmp(id) {
-  const emp = employees.find(e => e['รหัสพนักงาน'] === id);
+  const emp = employees.find(e => e.id === id);
   if (!emp) return;
   editMode['emp-panel'] = 'edit';
   document.getElementById('emp-panel-title').textContent = '✏️ แก้ไขข้อมูลพนักงาน';
-  document.getElementById('ep-id').value = emp['รหัสพนักงาน'];
+  document.getElementById('ep-id').value = emp.id;
   document.getElementById('ep-id').disabled = true;
-  document.getElementById('ep-name').value = emp['ชื่อ-นามสกุล'];
-  document.getElementById('ep-date').value = emp['วันที่เริ่มงาน'] || '';
+  document.getElementById('ep-name').value = emp.name;
+  document.getElementById('ep-date').value = emp.startDate || '';
   document.getElementById('emp-panel').classList.add('show');
 }
 
@@ -1027,7 +1027,7 @@ async function saveEmployee() {
   try {
     Swal.fire({ title:'กำลังบันทึก...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
     const r = await callGAS({ action: isEdit?'updateEmployee':'addEmployee', id, name, startDate });
-    if (r.success) {
+    if (r.status === 'ok') {
       await loadEmps(); closePanel('emp-panel');
       Swal.fire({ icon:'success', title:'บันทึกสำเร็จ!', timer:1800, showConfirmButton:false });
     } else Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:r.message });
@@ -1043,7 +1043,7 @@ async function delEmp(id, name) {
   try {
     Swal.fire({ title:'กำลังลบ...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
     const r = await callGAS({ action:'deleteEmployee', id });
-    if (r.success) { await loadEmps(); Swal.fire({ icon:'success', title:'ลบสำเร็จ', timer:1500, showConfirmButton:false }); }
+    if (r.status === 'ok') { await loadEmps(); Swal.fire({ icon:'success', title:'ลบสำเร็จ', timer:1500, showConfirmButton:false }); }
     else Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:r.message });
   } catch(e) { Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:e.message }); }
 }
@@ -1053,7 +1053,7 @@ async function delEmp(id, name) {
 // ════════════════════════════════════════════════════════
 async function loadTypes() {
   const r = await callGAS({ action:'getLeaveTypes' });
-  if (!r.success) return;
+  if (r.status !== 'ok') return;
   leaveTypes = r.data || [];
   refreshTypeSelects();
   renderLtTable();
@@ -1067,11 +1067,11 @@ function refreshTypeSelects() {
     el.innerHTML = '<option value="">— เลือกประเภทการลา —</option>';
     leaveTypes.forEach(lt => {
       const o = document.createElement('option');
-      o.value = lt['รหัส'];
-      o.textContent = lt['ชื่อประเภทการลา'];
-      o.dataset.max = lt['วันสูงสุด'] || 0;
-      o.dataset.notes = lt['หมายเหตุ'] || '';
-      o.dataset.name = lt['ชื่อประเภทการลา'];
+      o.value = lt.id;
+      o.textContent = lt.name;
+      o.dataset.max = lt.maxDays || 0;
+      o.dataset.notes = lt.note || '';
+      o.dataset.name = lt.name;
       el.appendChild(o);
     });
     if (v) el.value = v;
@@ -1084,27 +1084,27 @@ function renderLtTable() {
     ? '<tr><td colspan="5" class="no-data">ไม่มีข้อมูลประเภทการลา</td></tr>'
     : leaveTypes.map(lt => `
         <tr>
-          <td><strong>${lt['รหัส']}</strong></td>
-          <td>${lt['ชื่อประเภทการลา']}</td>
-          <td class="text-center">${lt['วันสูงสุด']} วัน</td>
-          <td style="font-size:0.8rem; color:#666; max-width:300px">${lt['หมายเหตุ']||'—'}</td>
+          <td><strong>${lt.id}</strong></td>
+          <td>${lt.name}</td>
+          <td class="text-center">${lt.maxDays} วัน</td>
+          <td style="font-size:0.8rem; color:#666; max-width:300px">${lt.note||'—'}</td>
           <td>
-            <button class="btn btn-warning btn-sm" onclick="editLt('${lt['รหัส']}')">✏️ แก้ไข</button>
-            <button class="btn btn-danger btn-sm" onclick="delLt('${lt['รหัส']}','${lt['ชื่อประเภทการลา']}')">🗑️</button>
+            <button class="btn btn-warning btn-sm" onclick="editLt('${lt.id}')">✏️ แก้ไข</button>
+            <button class="btn btn-danger btn-sm" onclick="delLt('${lt.id}','${lt.name}')">🗑️</button>
           </td>
         </tr>`).join('');
 }
 
 function editLt(id) {
-  const lt = leaveTypes.find(l => l['รหัส'] === id);
+  const lt = leaveTypes.find(l => l.id === id);
   if (!lt) return;
   editMode['lt-panel'] = 'edit';
   document.getElementById('lt-panel-title').textContent = '✏️ แก้ไขประเภทการลา';
-  document.getElementById('ltp-id').value = lt['รหัส'];
+  document.getElementById('ltp-id').value = lt.id;
   document.getElementById('ltp-id').disabled = true;
-  document.getElementById('ltp-name').value = lt['ชื่อประเภทการลา'];
-  document.getElementById('ltp-max').value = lt['วันสูงสุด'] || '';
-  document.getElementById('ltp-notes').value = lt['หมายเหตุ'] || '';
+  document.getElementById('ltp-name').value = lt.name;
+  document.getElementById('ltp-max').value = lt.maxDays || '';
+  document.getElementById('ltp-notes').value = lt.note || '';
   document.getElementById('lt-panel').classList.add('show');
 }
 
@@ -1118,7 +1118,7 @@ async function saveLeaveType() {
   try {
     Swal.fire({ title:'กำลังบันทึก...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
     const r = await callGAS({ action: isEdit?'updateLeaveType':'addLeaveType', id, name, maxDays, notes });
-    if (r.success) {
+    if (r.status === 'ok') {
       await loadTypes(); closePanel('lt-panel');
       Swal.fire({ icon:'success', title:'บันทึกสำเร็จ!', timer:1800, showConfirmButton:false });
     } else Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:r.message });
@@ -1134,7 +1134,7 @@ async function delLt(id, name) {
   try {
     Swal.fire({ title:'กำลังลบ...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
     const r = await callGAS({ action:'deleteLeaveType', id });
-    if (r.success) { await loadTypes(); Swal.fire({ icon:'success', title:'ลบสำเร็จ', timer:1500, showConfirmButton:false }); }
+    if (r.status === 'ok') { await loadTypes(); Swal.fire({ icon:'success', title:'ลบสำเร็จ', timer:1500, showConfirmButton:false }); }
     else Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:r.message });
   } catch(e) { Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:e.message }); }
 }
@@ -1144,26 +1144,26 @@ async function delLt(id, name) {
 // ════════════════════════════════════════════════════════
 async function loadHolsData() {
   const r = await callGAS({ action:'getHolidays' });
-  if (!r.success) return;
+  if (r.status !== 'ok') return;
   const data = r.data || [];
-  holidays = data.map(h => h['วันที่']);
+  holidays = data.map(h => h.date);
   renderHolTable(data);
 }
 
 function renderHolTable(data) {
   const days = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
-  const sorted = [...data].sort((a,b) => (a['วันที่'] > b['วันที่'] ? 1 : -1));
+  const sorted = [...data].sort((a,b) => (a.date > b.date ? 1 : -1));
   document.getElementById('hol-tbody').innerHTML =
     sorted.length === 0
     ? '<tr><td colspan="4" class="no-data">ไม่มีข้อมูลวันหยุด</td></tr>'
     : sorted.map(h => {
-        const d = new Date(h['วันที่']);
+        const d = new Date(h.date);
         const dayName = isNaN(d) ? '' : days[d.getDay()];
         return `<tr>
-          <td>${fmtThai(h['วันที่'])}</td>
-          <td>${h['ชื่อวันหยุด']}</td>
+          <td>${fmtThai(h.date)}</td>
+          <td>${h.name}</td>
           <td><span class="badge" style="background:var(--c1);color:var(--c4)">${dayName}</span></td>
-          <td><button class="btn btn-danger btn-sm" onclick="delHol('${h['วันที่']}')">🗑️</button></td>
+          <td><button class="btn btn-danger btn-sm" onclick="delHol('${h.date}')">🗑️</button></td>
         </tr>`;
       }).join('');
 }
@@ -1175,7 +1175,7 @@ async function addHoliday() {
   try {
     Swal.fire({ title:'กำลังบันทึก...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
     const r = await callGAS({ action:'addHoliday', date, name });
-    if (r.success) {
+    if (r.status === 'ok') {
       document.getElementById('h-date').value = '';
       document.getElementById('h-name').value = '';
       await loadHolsData();
@@ -1193,7 +1193,7 @@ async function delHol(date) {
   try {
     Swal.fire({ title:'กำลังลบ...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
     const r = await callGAS({ action:'deleteHoliday', date });
-    if (r.success) { await loadHolsData(); Swal.fire({ icon:'success', title:'ลบสำเร็จ', timer:1500, showConfirmButton:false }); }
+    if (r.status === 'ok') { await loadHolsData(); Swal.fire({ icon:'success', title:'ลบสำเร็จ', timer:1500, showConfirmButton:false }); }
   } catch(e) { Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:e.message }); }
 }
 
@@ -1283,7 +1283,7 @@ async function submitLeave() {
     const r = await callGAS({
       action:'addLeaveRecord', empId, empName, typeName, reason, start, end, dtype: dt, days, phone, sub
     });
-    if (r.success) {
+    if (r.status === 'ok') {
       await loadRecords();
       resetForm();
       Swal.fire({
@@ -1329,7 +1329,7 @@ async function loadRecords() {
   if (emp) p.employeeId = emp;
   try {
     const r = await callGAS(p);
-    if (r.success) { allRecords = r.data || []; renderRecords(); }
+    if (r.status === 'ok') { allRecords = r.data || []; renderRecords(); }
   } catch(err) { console.error(err); }
 }
 
@@ -1340,35 +1340,35 @@ function renderRecords() {
     ? '<tr><td colspan="9" class="no-data">ไม่พบข้อมูลการลา</td></tr>'
     : allRecords.map(r => `
         <tr>
-          <td><small style="color:#999">${r['รหัสการลา']||''}</small></td>
-          <td>${r['ชื่อพนักงาน']||''}</td>
-          <td><span class="badge" style="${badgeStyle(r['ประเภทการลา'])}">${r['ประเภทการลา']||''}</span></td>
-          <td>${fmtThai(r['วันที่ลา'])}</td>
-          <td>${fmtThai(r['ลาถึงวันที่'])}</td>
-          <td>${dtMap[r['ประเภทวัน']]||r['ประเภทวัน']||'เต็มวัน'}</td>
-          <td><strong>${r['จำนวนวันลา']||0}</strong></td>
-          <td>${r['เบอร์โทรศัพท์']||'—'}</td>
+          <td><small style="color:#999">${r.id||''}</small></td>
+          <td>${r.employeeName||''}</td>
+          <td><span class="badge" style="${badgeStyle(r.leaveType)}">${r.leaveType||''}</span></td>
+          <td>${fmtThai(r.startDate)}</td>
+          <td>${fmtThai(r.endDate)}</td>
+          <td>${dtMap[r.dayType]||r.dayType||'เต็มวัน'}</td>
+          <td><strong>${r.totalDays||0}</strong></td>
+          <td>${r.phone||'—'}</td>
           <td>
-            <button class="btn btn-warning btn-xs" onclick="openEdit('${r['รหัสการลา']}')">✏️</button>
-            <button class="btn btn-danger btn-xs" onclick="delRecord('${r['รหัสการลา']}')">🗑️</button>
+            <button class="btn btn-warning btn-xs" onclick="openEdit('${r.id}')">✏️</button>
+            <button class="btn btn-danger btn-xs" onclick="delRecord('${r.id}')">🗑️</button>
           </td>
         </tr>`).join('');
 }
 
 function openEdit(id) {
-  const rec = allRecords.find(r => r['รหัสการลา'] === id);
+  const rec = allRecords.find(r => r.id === id);
   if (!rec) return;
-  document.getElementById('em-id').value   = rec['รหัสการลา'];
-  document.getElementById('em-emp').value  = rec['รหัสพนักงาน'];
+  document.getElementById('em-id').value   = rec.id;
+  document.getElementById('em-emp').value  = rec.employeeId;
   const ltSel = document.getElementById('em-type');
-  const ltOpt = Array.from(ltSel.options).find(o => o.dataset.name === rec['ประเภทการลา']);
+  const ltOpt = Array.from(ltSel.options).find(o => o.dataset.name === rec.leaveType);
   if (ltOpt) ltSel.value = ltOpt.value;
-  document.getElementById('em-reason').value = rec['สาเหตุการลา'] || '';
-  document.getElementById('em-start').value  = rec['วันที่ลา'] || '';
-  document.getElementById('em-end').value    = rec['ลาถึงวันที่'] || '';
-  document.getElementById('em-dtype').value  = rec['ประเภทวัน'] || 'full';
-  document.getElementById('em-days').value   = rec['จำนวนวันลา'] || 1;
-  document.getElementById('em-phone').value  = rec['เบอร์โทรศัพท์'] || '';
+  document.getElementById('em-reason').value = rec.reason || '';
+  document.getElementById('em-start').value  = rec.startDate || '';
+  document.getElementById('em-end').value    = rec.endDate || '';
+  document.getElementById('em-dtype').value  = rec.dayType || 'full';
+  document.getElementById('em-days').value   = rec.totalDays || 1;
+  document.getElementById('em-phone').value  = rec.phone || '';
   document.getElementById('edit-modal').style.display = 'block';
 }
 function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
@@ -1392,7 +1392,7 @@ async function saveEdit() {
       days:    document.getElementById('em-days').value,
       phone:   document.getElementById('em-phone').value,
     });
-    if (r.success) {
+    if (r.status === 'ok') {
       await loadRecords(); closeModal();
       Swal.fire({ icon:'success', title:'แก้ไขสำเร็จ!', timer:1500, showConfirmButton:false });
     } else Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:r.message });
@@ -1408,7 +1408,7 @@ async function delRecord(id) {
   try {
     Swal.fire({ title:'กำลังลบ...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
     const r = await callGAS({ action:'deleteLeaveRecord', id });
-    if (r.success) { await loadRecords(); Swal.fire({ icon:'success', title:'ลบสำเร็จ', timer:1500, showConfirmButton:false }); }
+    if (r.status === 'ok') { await loadRecords(); Swal.fire({ icon:'success', title:'ลบสำเร็จ', timer:1500, showConfirmButton:false }); }
   } catch(e) { Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:e.message }); }
 }
 
@@ -1424,7 +1424,7 @@ async function loadStats() {
     Swal.fire({ title:'กำลังโหลดสถิติ...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
     const r = await callGAS(p);
     Swal.close();
-    if (r.success) renderStats(r.data);
+    if (r.status === 'ok') renderStats(r.data);
   } catch(e) { Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:e.message }); }
 }
 
@@ -1491,7 +1491,7 @@ async function loadIndividual() {
     Swal.fire({ title:'กำลังโหลดข้อมูล...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
     const r = await callGAS({ action:'getIndividualStats', employeeId:empId, year });
     Swal.close();
-    if (r.success) {
+    if (r.status === 'ok') {
       document.getElementById('i-content').style.display = 'block';
       renderIndividual(r.data, empId);
     }
@@ -1500,12 +1500,12 @@ async function loadIndividual() {
 
 function renderIndividual(data, empId) {
   const { records=[], byType={}, totalDays=0 } = data;
-  const emp = employees.find(e => e['รหัสพนักงาน'] === empId) || {};
+  const emp = employees.find(e => e.id === empId) || {};
 
   document.getElementById('i-summary').innerHTML = `
     <div class="stat-card" style="grid-column:1/-1; text-align:left; border-top-color:var(--c4)">
-      <div style="font-weight:700; font-size:1rem; color:var(--c4)">👤 ${emp['ชื่อ-นามสกุล']||empId}</div>
-      <div style="font-size:0.78rem; color:#888; margin-top:3px">รหัส: ${empId} | เริ่มงาน: ${fmtThai(emp['วันที่เริ่มงาน']||'')}</div>
+      <div style="font-weight:700; font-size:1rem; color:var(--c4)">👤 ${emp.name||empId}</div>
+      <div style="font-size:0.78rem; color:#888; margin-top:3px">รหัส: ${empId} | เริ่มงาน: ${fmtThai(emp.startDate||'')}</div>
     </div>
     <div class="stat-card"><div class="stat-num">${records.length}</div><div class="stat-lbl">รายการลา</div></div>
     <div class="stat-card"><div class="stat-num">${totalDays}</div><div class="stat-lbl">รวมวันลา</div></div>
@@ -1534,13 +1534,13 @@ function renderIndividual(data, empId) {
 
   // Quota table
   document.getElementById('i-quota').innerHTML = leaveTypes.map(lt => {
-    const used = parseFloat(byType[lt['ชื่อประเภทการลา']] || 0);
-    const max  = parseFloat(lt['วันสูงสุด'] || 0);
+    const used = parseFloat(byType[lt.name] || 0);
+    const max  = parseFloat(lt.maxDays || 0);
     const rem  = Math.max(0, max - used);
     const pct  = max > 0 ? Math.min(100, (used/max*100)) : 0;
     const col  = pct >= 100 ? '#e74c3c' : pct >= 80 ? '#f39c12' : '#27ae60';
     return `<tr>
-      <td>${lt['ชื่อประเภทการลา']}</td>
+      <td>${lt.name}</td>
       <td>${max} วัน</td>
       <td>${used} วัน</td>
       <td><strong style="color:${col}">${rem} วัน</strong></td>
@@ -1555,14 +1555,14 @@ function renderIndividual(data, empId) {
   document.getElementById('i-hist').innerHTML = records.length === 0
     ? '<tr><td colspan="6" class="no-data">ไม่มีประวัติการลา</td></tr>'
     : records.map(r => `<tr>
-        <td><span class="badge" style="${badgeStyle(r['ประเภทการลา'])}">${r['ประเภทการลา']||''}</span></td>
-        <td style="max-width:200px; font-size:0.82rem">${r['สาเหตุการลา']||'—'}</td>
-        <td>${fmtThai(r['วันที่ลา'])}</td>
-        <td>${fmtThai(r['ลาถึงวันที่'])}</td>
-        <td><strong>${r['จำนวนวันลา']||0}</strong></td>
+        <td><span class="badge" style="${badgeStyle(r.leaveType)}">${r.leaveType||''}</span></td>
+        <td style="max-width:200px; font-size:0.82rem">${r.reason||'—'}</td>
+        <td>${fmtThai(r.startDate)}</td>
+        <td>${fmtThai(r.endDate)}</td>
+        <td><strong>${r.totalDays||0}</strong></td>
         <td>
-          <button class="btn btn-warning btn-xs" onclick="openEdit('${r['รหัสการลา']}')">✏️</button>
-          <button class="btn btn-danger btn-xs" onclick="delRecord('${r['รหัสการลา']}')">🗑️</button>
+          <button class="btn btn-warning btn-xs" onclick="openEdit('${r.id}')">✏️</button>
+          <button class="btn btn-danger btn-xs" onclick="delRecord('${r.id}')">🗑️</button>
         </td>
       </tr>`).join('');
 }
@@ -1572,7 +1572,7 @@ function renderIndividual(data, empId) {
 // ════════════════════════════════════════════════════════
 function exportCSV() {
   if (!allRecords.length) return Swal.fire({ icon:'info', title:'ไม่มีข้อมูล' });
-  const headers = ['รหัสการลา','รหัสพนักงาน','ชื่อพนักงาน','ประเภทการลา','สาเหตุการลา','วันที่ลา','ลาถึงวันที่','ประเภทวัน','จำนวนวันลา','เบอร์โทรศัพท์'];
+  const headers = ['id','employeeId','employeeName','leaveType','reason','startDate','endDate','dayType','totalDays','phone'];
   const rows = allRecords.map(r => headers.map(h => `"${r[h]||''}"`));
   const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
   const a = Object.assign(document.createElement('a'), {
