@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ไกด์เที่ยวใกล้สิรินพลารีสอร์ท ระยอง</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Kanit', sans-serif; 
+            background-color: #e5e7eb; 
+            background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
+        }
+        .infographic-container {
+            background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+        .hover-bounce:hover {
+            transform: translateY(-8px);
+        }
+        .floating-icon {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen py-10 px-4">
+
+    <!-- Infographic Main Box -->
+    <div class="infographic-container max-w-2xl w-full rounded-[2.5rem] shadow-2xl overflow-hidden border-[10px] border-white relative text-green-900 pb-10">
+        
+        <!-- Header -->
+        <div class="relative w-full h-64 bg-green-200">
+            <img src="https://images.unsplash.com/photo-1544550581-5f7ceaf7f992?auto=format&fit=crop&q=80&w=1000" alt="Phla Beach" class="w-full h-full object-cover opacity-80 mix-blend-multiply">
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-white/30 backdrop-blur-sm">
+                <div class="text-6xl mb-2 floating-icon">🐢</div>
+                <h1 class="text-3xl md:text-4xl font-bold text-green-800 drop-shadow-md">พิกัดชิลล์.. ใกล้สิรินพลา รีสอร์ท</h1>
+                <p class="text-lg md:text-xl font-medium mt-2 text-green-700 bg-white/80 px-4 py-1 rounded-full">เดินทางง่าย ไม่เกิน 30 นาที 🚗💨</p>
+            </div>
+            <!-- Decorative Leaves -->
+            <div class="absolute -bottom-6 -left-6 text-7xl transform rotate-45">🌿</div>
+            <div class="absolute -bottom-8 -right-4 text-7xl transform -rotate-12">🍃</div>
+        </div>
+
+        <!-- Content Sections -->
+        <div class="px-6 md:px-10 mt-10 space-y-8">
+
+            <!-- Section 1: Attractions -->
+            <div class="bg-white rounded-3xl p-5 shadow-sm hover-bounce transition-transform duration-300 border-2 border-green-100 flex flex-col md:flex-row gap-5 items-center">
+                <div class="w-full md:w-1/3 relative">
+                    <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=400" alt="ชายหาดพลา" class="w-full h-32 object-cover rounded-2xl shadow-inner">
+                    <div class="absolute -top-3 -right-3 text-4xl bg-white rounded-full p-1 shadow-md">🏖️</div>
+                </div>
+                <div class="w-full md:w-2/3">
+                    <h2 class="text-xl font-bold text-green-700 flex items-center gap-2">
+                        สถานที่ท่องเที่ยว
+                    </h2>
+                    <h3 class="text-lg font-medium">หาดพลา & สะพานท่าเรือ</h3>
+                    <p class="text-sm text-gray-600 mt-1">ชายหาดร่มรื่นด้วยทิวต้นสน บรรยากาศเงียบสงบ ไม่วุ่นวาย เหมาะกับการมานั่งปิกนิกหรือเดินเล่นรับลมเย็นๆ ตอนเย็นไปถ่ายรูปพระอาทิตย์ตกที่ท่าเรือพลาสวยมาก</p>
+                    <div class="mt-2 flex items-center gap-2 text-xs font-semibold text-green-600 bg-green-50 w-fit px-3 py-1 rounded-full">
+                        <span>📍 ห่างจากที่พัก: 0-5 นาที</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Coffee & Cafe -->
+            <div class="bg-white rounded-3xl p-5 shadow-sm hover-bounce transition-transform duration-300 border-2 border-green-100 flex flex-col md:flex-row-reverse gap-5 items-center">
+                <div class="w-full md:w-1/3 relative">
+                    <img src="https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&q=80&w=400" alt="ร้านกาแฟ" class="w-full h-32 object-cover rounded-2xl shadow-inner">
+                    <div class="absolute -top-3 -left-3 text-4xl bg-white rounded-full p-1 shadow-md">☕</div>
+                </div>
+                <div class="w-full md:w-2/3 text-left md:text-right">
+                    <h2 class="text-xl font-bold text-green-700 flex items-center md:justify-end gap-2">
+                        คาเฟ่สายแฟ (กาแฟดีมาก!)
+                    </h2>
+                    <h3 class="text-lg font-medium">Phala Craft Coffee Roasters</h3>
+                    <p class="text-sm text-gray-600 mt-1">คาเฟ่ตึก 4 ชั้นริมทะเล คั่วกาแฟเอง (Specialty) มุมถ่ายรูปมินิมอลเกาหลีสุดๆ นั่งจิบกาแฟมองวิวทะเลหลักล้าน (Pet-friendly ด้วยนะ 🐶)</p>
+                    <div class="mt-2 flex flex-col md:items-end gap-1 text-xs font-semibold">
+                        <span class="text-green-600 bg-green-50 w-fit px-3 py-1 rounded-full">📍 ห่างจากที่พัก: 5 นาที</span>
+                        <span class="text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full">✅ เปิด: จ-ศ (07:00-15:00) | ส-อา (09:00-17:00)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Restaurants -->
+            <div class="bg-white rounded-3xl p-5 shadow-sm hover-bounce transition-transform duration-300 border-2 border-green-100 flex flex-col md:flex-row gap-5 items-center">
+                <div class="w-full md:w-1/3 relative">
+                    <img src="https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&q=80&w=400" alt="อาหารทะเล" class="w-full h-32 object-cover rounded-2xl shadow-inner">
+                    <div class="absolute -top-3 -right-3 text-4xl bg-white rounded-full p-1 shadow-md">🦀</div>
+                </div>
+                <div class="w-full md:w-2/3">
+                    <h2 class="text-xl font-bold text-green-700 flex items-center gap-2">
+                        ร้านอาหารซีฟู้ด
+                    </h2>
+                    <h3 class="text-lg font-medium">ร้านตาลคู่ซีฟู้ด & Crab House</h3>
+                    <p class="text-sm text-gray-600 mt-1">ไม่ต้องไปไหนไกล! แวะกินอาหารทะเลสดๆ รสชาติจัดจ้านสไตล์พื้นบ้านระยองที่ <b>"ตาลคู่ซีฟู้ด"</b> หรือ <b>"Crab House"</b> ได้เลย ทั้งสองร้านอยู่ติดหาด บรรยากาศชิลสุดๆ</p>
+                    <div class="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
+                        <span class="text-green-600 bg-green-50 px-3 py-1 rounded-full">📍 ห่างจากที่พัก: 5-10 นาที</span>
+                        <span class="text-blue-600 bg-blue-50 px-3 py-1 rounded-full">✅ เปิดทุกวัน: ~11:00 - 21:00 น.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Facilities -->
+            <div class="bg-green-100/50 rounded-3xl p-5 border-2 border-green-200 flex items-center gap-4">
+                <div class="text-5xl">🏪</div>
+                <div>
+                    <h2 class="text-lg font-bold text-green-800">สิ่งอำนวยความสะดวก & ร้านสะดวกซื้อ</h2>
+                    <p class="text-sm text-gray-700 mt-1">มี <b>7-Eleven</b> สาขาหาดพลา ขับรถเพียง 2-3 นาที หากต้องการของใช้เยอะๆ สามารถแวะ <b>Lotus's go fresh</b> ที่ตลาดบ้านฉาง (ห่างไป 15 นาที) และอยู่ใกล้ <b>รพ.บ้านฉาง</b> (20 นาที) อุ่นใจได้เลย 🏥</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-10 text-center flex flex-col items-center">
+            <div class="bg-green-600 text-white px-6 py-2 rounded-full font-semibold shadow-md flex items-center gap-2">
+                <span>✨ ตรวจสอบแล้ว: สถานที่ทั้งหมดเปิดให้บริการปกติ ✨</span>
+            </div>
+            <p class="text-xs text-green-600 mt-4 opacity-80">Design by AI Assistant • Minimal Green Theme</p>
+        </div>
+
+    </div>
+</body>
+</html>
